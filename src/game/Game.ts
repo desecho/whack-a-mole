@@ -3,11 +3,11 @@ import { findHitMoleId, eventToCanvasPoint } from "./input";
 import { randomSpawnDelay } from "./random";
 import { createHoles, renderGame, resizeCanvasToDisplaySize } from "./renderer";
 import {
+  advanceMoleLifecycle,
+  applyHitToMole,
   computeDifficulty,
   computeTimeLeftMs,
   createInitialState,
-  expireMoles,
-  removeMoleById,
   trySpawnOneMole
 } from "./state";
 import { getBestScore, setBestScore } from "./storage";
@@ -88,7 +88,7 @@ export class Game {
       nextSpawnAtMs: 0
     };
     this.emitState();
-    this.renderCurrentState();
+    this.renderCurrentState(nowMs);
     this.startLoop();
   }
 
@@ -110,12 +110,12 @@ export class Game {
   private frame = (nowMs: number): void => {
     if (this.state.status !== "running") {
       this.frameHandle = null;
-      this.renderCurrentState();
+      this.renderCurrentState(nowMs);
       return;
     }
 
     this.update(nowMs);
-    this.renderCurrentState();
+    this.renderCurrentState(nowMs);
 
     if (this.state.status === "running") {
       this.frameHandle = requestAnimationFrame(this.frame);
@@ -141,7 +141,7 @@ export class Game {
       ...this.state,
       difficulty: nextDifficulty,
       timeLeftMs: remainingMs,
-      activeMoles: expireMoles(this.state.activeMoles, nowMs)
+      activeMoles: advanceMoleLifecycle(this.state.activeMoles, nowMs, this.config)
     };
 
     if (remainingMs <= 0) {
@@ -205,27 +205,38 @@ export class Game {
     }
 
     event.preventDefault();
+    const nowMs = performance.now();
     const point = eventToCanvasPoint(event, this.canvas);
-    const hitMoleId = findHitMoleId(point, this.state.activeMoles, this.holes);
+    const hitMoleId = findHitMoleId(point, this.state.activeMoles, this.holes, nowMs);
     if (!hitMoleId) {
+      return;
+    }
+
+    const hitOutcome = applyHitToMole(
+      this.state.activeMoles,
+      hitMoleId,
+      nowMs,
+      this.config
+    );
+    if (!hitOutcome.awardedPoint) {
       return;
     }
 
     this.state = {
       ...this.state,
       score: this.state.score + 1,
-      activeMoles: removeMoleById(this.state.activeMoles, hitMoleId),
+      activeMoles: hitOutcome.activeMoles,
       nextSpawnAtMs: 0
     };
     this.emitState();
-    this.renderCurrentState();
+    this.renderCurrentState(nowMs);
   };
 
   private handleResize = (): void => {
     this.renderCurrentState();
   };
 
-  private renderCurrentState(): void {
+  private renderCurrentState(nowMs: number = performance.now()): void {
     const viewport = resizeCanvasToDisplaySize(this.canvas, this.context);
     this.holes = createHoles(
       viewport.width,
@@ -233,7 +244,14 @@ export class Game {
       this.config.boardRows,
       this.config.boardCols
     );
-    renderGame(this.context, viewport.width, viewport.height, this.state, this.holes);
+    renderGame(
+      this.context,
+      viewport.width,
+      viewport.height,
+      this.state,
+      this.holes,
+      nowMs
+    );
   }
 
   private emitState(): void {
@@ -243,4 +261,3 @@ export class Game {
     this.onStateChange(this.getState());
   }
 }
-

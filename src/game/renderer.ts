@@ -1,4 +1,5 @@
-import type { GameState, Hole } from "./types";
+import { getMoleCenter } from "./moleMotion";
+import type { ActiveMole, GameState, Hole } from "./types";
 
 interface CanvasViewport {
   width: number;
@@ -119,17 +120,20 @@ function drawHole(context: CanvasRenderingContext2D, hole: Hole): void {
 
 function drawMole(
   context: CanvasRenderingContext2D,
-  hole: Hole
+  hole: Hole,
+  mole: ActiveMole,
+  nowMs: number
 ): void {
   const headRadius = hole.radius * 0.78;
-  const centerX = hole.center.x;
-  const centerY = hole.center.y - hole.radius * 0.34;
+  const center = getMoleCenter(hole, mole, nowMs);
+  const centerX = center.x;
+  const centerY = center.y;
   const lineWidth = Math.max(1.5, hole.radius * 0.055);
 
   context.save();
 
   // Clip so the mole appears to emerge from the tunnel.
-  const clipTop = centerY - headRadius * 1.45;
+  const clipTop = hole.center.y - hole.radius * 2.2;
   const clipBottom = hole.center.y + hole.radius * 0.3;
   context.beginPath();
   context.rect(
@@ -307,7 +311,7 @@ function drawMole(
 
   for (const side of [-1, 1] as const) {
     const pawX = centerX + side * headRadius * 0.5;
-    const pawY = hole.center.y + hole.radius * 0.05;
+    const pawY = centerY + headRadius * 0.5;
     context.fillStyle = "#7b4a2e";
     context.beginPath();
     context.ellipse(
@@ -410,18 +414,22 @@ export function renderGame(
   width: number,
   height: number,
   state: GameState,
-  holes: Hole[]
+  holes: Hole[],
+  nowMs: number
 ): void {
   drawBackground(context, width, height);
   drawHud(context, width, state);
 
-  const activeHoles = new Set(state.activeMoles.map((mole) => mole.holeId));
+  const activeMolesByHole = new Map(
+    state.activeMoles.map((mole) => [mole.holeId, mole] as const)
+  );
   for (const hole of holes) {
     drawHole(context, hole);
   }
   for (const hole of holes) {
-    if (activeHoles.has(hole.id)) {
-      drawMole(context, hole);
+    const activeMole = activeMolesByHole.get(hole.id);
+    if (activeMole) {
+      drawMole(context, hole, activeMole, nowMs);
     }
   }
   for (const hole of holes) {

@@ -67,18 +67,79 @@ export function computeTimeLeftMs(
   return Math.max(0, roundDurationMs - elapsed);
 }
 
-export function expireMoles(
+export function advanceMoleLifecycle(
   activeMoles: ActiveMole[],
-  nowMs: number
+  nowMs: number,
+  config: GameConfig
 ): ActiveMole[] {
-  return activeMoles.filter((mole) => mole.hideAtMs > nowMs);
+  const advanced = activeMoles.map((mole) => {
+    if (mole.state === "up" && nowMs >= mole.hideAtMs) {
+      return {
+        ...mole,
+        state: "hiding" as const,
+        hideStartedAtMs: mole.hideAtMs,
+        hideDurationMs: config.timeoutHideDurationMs,
+        hideReason: "timeout" as const
+      };
+    }
+    return mole;
+  });
+
+  return advanced.filter((mole) => {
+    if (mole.state !== "hiding") {
+      return true;
+    }
+    const startedAt = mole.hideStartedAtMs ?? nowMs;
+    return nowMs < startedAt + mole.hideDurationMs;
+  });
 }
 
-export function removeMoleById(
+export function applyHitToMole(
   activeMoles: ActiveMole[],
-  moleId: string
-): ActiveMole[] {
-  return activeMoles.filter((mole) => mole.id !== moleId);
+  moleId: string,
+  nowMs: number,
+  config: GameConfig
+): { activeMoles: ActiveMole[]; awardedPoint: boolean } {
+  const index = activeMoles.findIndex((mole) => mole.id === moleId);
+  if (index < 0) {
+    return {
+      activeMoles,
+      awardedPoint: false
+    };
+  }
+
+  const target = activeMoles[index];
+  if (target.wasHit) {
+    return {
+      activeMoles,
+      awardedPoint: false
+    };
+  }
+
+  let updatedTarget: ActiveMole;
+  if (target.state === "hiding") {
+    updatedTarget = {
+      ...target,
+      wasHit: true,
+      hideReason: "hit"
+    };
+  } else {
+    updatedTarget = {
+      ...target,
+      wasHit: true,
+      state: "hiding",
+      hideStartedAtMs: nowMs,
+      hideDurationMs: config.hitHideDurationMs,
+      hideReason: "hit"
+    };
+  }
+
+  const nextMoles = [...activeMoles];
+  nextMoles[index] = updatedTarget;
+  return {
+    activeMoles: nextMoles,
+    awardedPoint: true
+  };
 }
 
 export function getAvailableHoleIds(
@@ -124,7 +185,12 @@ export function trySpawnOneMole(
     id: createMoleId(nowMs, holeId, random),
     holeId,
     shownAtMs: nowMs,
-    hideAtMs: nowMs + state.difficulty.visibleDurationMs
+    hideAtMs: nowMs + state.difficulty.visibleDurationMs,
+    state: "up",
+    hideStartedAtMs: null,
+    hideDurationMs: config.timeoutHideDurationMs,
+    hideReason: null,
+    wasHit: false
   };
 
   return {
@@ -132,4 +198,3 @@ export function trySpawnOneMole(
     activeMoles: [...state.activeMoles, newMole]
   };
 }
-

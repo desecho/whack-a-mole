@@ -4,6 +4,8 @@ export const DEFAULT_CONFIG: GameConfig = {
   roundDurationMs: 60_000,
   boardRows: 3,
   boardCols: 3,
+  hitHideDurationMs: 120,
+  timeoutHideDurationMs: 220,
   difficultyStepMs: 10_000,
   baseVisibleDurationMs: 1_150,
   minVisibleDurationMs: 480,
@@ -15,4 +17,3 @@ export const DEFAULT_CONFIG: GameConfig = {
   spawnDelayMinStepMs: 36,
   spawnDelayMaxStepMs: 55
 };
-

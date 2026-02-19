@@ -1,3 +1,4 @@
+import { getMoleCenter } from "./moleMotion";
 import type { ActiveMole, Hole, Vec2 } from "./types";
 
 export function eventToCanvasPoint(
@@ -15,6 +16,7 @@ export function findHitMoleId(
   point: Vec2,
   activeMoles: ActiveMole[],
   holes: Hole[],
+  nowMs: number,
   hitRadiusScale = 0.72
 ): string | null {
   const holeMap = new Map(holes.map((hole) => [hole.id, hole]));
@@ -25,13 +27,13 @@ export function findHitMoleId(
     if (!hole) {
       continue;
     }
+    const center = getMoleCenter(hole, mole, nowMs);
     const hitRadius = hole.radius * hitRadiusScale;
-    const deltaX = point.x - hole.center.x;
-    const deltaY = point.y - hole.center.y;
+    const deltaX = point.x - center.x;
+    const deltaY = point.y - center.y;
     if (deltaX * deltaX + deltaY * deltaY <= hitRadius * hitRadius) {
       return mole.id;
     }
   }
   return null;
 }
-

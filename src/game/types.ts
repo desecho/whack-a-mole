@@ -16,6 +16,11 @@ export interface ActiveMole {
   holeId: number;
   shownAtMs: number;
   hideAtMs: number;
+  state: "up" | "hiding";
+  hideStartedAtMs: number | null;
+  hideDurationMs: number;
+  hideReason: "timeout" | "hit" | null;
+  wasHit: boolean;
 }
 
 export interface DifficultyState {
@@ -30,6 +35,8 @@ export interface GameConfig {
   roundDurationMs: number;
   boardRows: number;
   boardCols: number;
+  hitHideDurationMs: number;
+  timeoutHideDurationMs: number;
   difficultyStepMs: number;
   baseVisibleDurationMs: number;
   minVisibleDurationMs: number;
@@ -52,4 +59,3 @@ export interface GameState {
   activeMoles: ActiveMole[];
   difficulty: DifficultyState;
 }
-
