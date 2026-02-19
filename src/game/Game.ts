@@ -73,6 +73,14 @@ export class Game {
     this.beginRound();
   }
 
+  public setSoundMuted(muted: boolean): void {
+    this.hitSoundPlayer.setMuted(muted);
+  }
+
+  public isSoundMuted(): boolean {
+    return this.hitSoundPlayer.isMuted();
+  }
+
   public destroy(): void {
     this.stopLoop();
     this.hitSoundPlayer.destroy();

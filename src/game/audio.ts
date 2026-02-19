@@ -4,6 +4,8 @@ interface HitSoundPlayer {
   prime: () => void;
   playHit: () => void;
   destroy: () => void;
+  setMuted: (muted: boolean) => void;
+  isMuted: () => boolean;
 }
 
 const HIT_DURATION_SECONDS = 0.09;
@@ -25,6 +27,7 @@ export function createHitSoundPlayer(): HitSoundPlayer {
   let context: AudioContext | null = null;
   let unavailable = false;
   let destroyed = false;
+  let muted = false;
 
   const ensureContext = (): AudioContext | null => {
     if (destroyed || unavailable) {
@@ -60,6 +63,10 @@ export function createHitSoundPlayer(): HitSoundPlayer {
   };
 
   const prime = (): void => {
+    if (muted) {
+      return;
+    }
+
     const audioContext = ensureContext();
     if (!audioContext) {
       return;
@@ -68,6 +75,10 @@ export function createHitSoundPlayer(): HitSoundPlayer {
   };
 
   const playHit = (): void => {
+    if (muted) {
+      return;
+    }
+
     const audioContext = ensureContext();
     if (!audioContext) {
       return;
@@ -120,9 +131,17 @@ export function createHitSoundPlayer(): HitSoundPlayer {
     });
   };
 
+  const setMuted = (nextMuted: boolean): void => {
+    muted = nextMuted;
+  };
+
+  const isMuted = (): boolean => muted;
+
   return {
     prime,
     playHit,
-    destroy
+    destroy,
+    setMuted,
+    isMuted
   };
 }

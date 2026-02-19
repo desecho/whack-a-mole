@@ -84,6 +84,14 @@ button:disabled {
   cursor: not-allowed;
 }
 
+#mute-btn.is-muted {
+  background: #3e5f6d;
+}
+
+#mute-btn.is-muted:hover:not(:disabled) {
+  background: #344f5a;
+}
+
 #status {
   margin: 0.75rem 0 0;
   min-height: 1.5rem;
@@ -104,4 +112,3 @@ button:disabled {
     height: 62vh;
   }
 }
-

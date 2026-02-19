@@ -6,11 +6,13 @@ import type { GameState } from "./game/types";
 const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
 const startButton = document.querySelector<HTMLButtonElement>("#start-btn");
 const restartButton = document.querySelector<HTMLButtonElement>("#restart-btn");
+const muteButton = document.querySelector<HTMLButtonElement>("#mute-btn");
 const statusLabel = document.querySelector<HTMLParagraphElement>("#status");
 
-if (!canvas || !startButton || !restartButton || !statusLabel) {
+if (!canvas || !startButton || !restartButton || !muteButton || !statusLabel) {
   throw new Error("Required game elements are missing from index.html.");
 }
+const muteButtonEl: HTMLButtonElement = muteButton;
 
 function createStatusText(state: GameState): string {
   if (state.status === "idle") {
@@ -38,9 +40,21 @@ restartButton.addEventListener("click", () => {
   game.restart();
 });
 
+function syncMuteButton(): void {
+  const muted = game.isSoundMuted();
+  muteButtonEl.textContent = muted ? "Unmute Sound" : "Mute Sound";
+  muteButtonEl.setAttribute("aria-pressed", String(muted));
+  muteButtonEl.classList.toggle("is-muted", muted);
+}
+
+muteButtonEl.addEventListener("click", () => {
+  game.setSoundMuted(!game.isSoundMuted());
+  syncMuteButton();
+});
+
 statusLabel.textContent = createStatusText(game.getState());
+syncMuteButton();
 
 window.addEventListener("beforeunload", () => {
   game.destroy();
 });
-

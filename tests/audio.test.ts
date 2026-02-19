@@ -194,4 +194,24 @@ describe("createHitSoundPlayer", () => {
     expect(context.close).toHaveBeenCalledTimes(1);
     expect(context.createOscillator).not.toHaveBeenCalled();
   });
+
+  it("does not initialize or play while muted", () => {
+    audioGlobal.AudioContext = MockAudioContext;
+    const player = createHitSoundPlayer();
+
+    player.setMuted(true);
+    expect(player.isMuted()).toBe(true);
+    player.prime();
+    player.playHit();
+
+    expect(MockAudioContext.instances).toHaveLength(0);
+
+    player.setMuted(false);
+    expect(player.isMuted()).toBe(false);
+    player.playHit();
+
+    expect(MockAudioContext.instances).toHaveLength(1);
+    const context = MockAudioContext.instances[0];
+    expect(context.createOscillator).toHaveBeenCalledTimes(1);
+  });
 });
