@@ -121,30 +121,254 @@ function drawMole(
   context: CanvasRenderingContext2D,
   hole: Hole
 ): void {
-  const bodyRadius = hole.radius * 0.72;
-  const centerY = hole.center.y - hole.radius * 0.36;
+  const headRadius = hole.radius * 0.78;
+  const centerX = hole.center.x;
+  const centerY = hole.center.y - hole.radius * 0.34;
+  const lineWidth = Math.max(1.5, hole.radius * 0.055);
 
-  context.fillStyle = "#8a5834";
+  context.save();
+
+  // Clip so the mole appears to emerge from the tunnel.
+  const clipTop = centerY - headRadius * 1.45;
+  const clipBottom = hole.center.y + hole.radius * 0.3;
   context.beginPath();
-  context.arc(hole.center.x, centerY, bodyRadius, 0, Math.PI * 2);
+  context.rect(
+    centerX - hole.radius * 1.6,
+    clipTop,
+    hole.radius * 3.2,
+    clipBottom - clipTop
+  );
+  context.clip();
+
+  const furGradient = context.createRadialGradient(
+    centerX - headRadius * 0.28,
+    centerY - headRadius * 0.4,
+    headRadius * 0.2,
+    centerX,
+    centerY + headRadius * 0.25,
+    headRadius * 1.08
+  );
+  furGradient.addColorStop(0, "#af7b4f");
+  furGradient.addColorStop(0.55, "#825131");
+  furGradient.addColorStop(1, "#5b341f");
+
+  for (const side of [-1, 1] as const) {
+    const earX = centerX + side * headRadius * 0.47;
+    const earY = centerY - headRadius * 0.52;
+
+    context.fillStyle = "#6c3f26";
+    context.beginPath();
+    context.ellipse(
+      earX,
+      earY,
+      headRadius * 0.25,
+      headRadius * 0.22,
+      side * 0.28,
+      0,
+      Math.PI * 2
+    );
+    context.fill();
+
+    context.fillStyle = "#d9a692";
+    context.beginPath();
+    context.ellipse(
+      earX + side * headRadius * 0.03,
+      earY + headRadius * 0.01,
+      headRadius * 0.13,
+      headRadius * 0.11,
+      side * 0.24,
+      0,
+      Math.PI * 2
+    );
+    context.fill();
+  }
+
+  context.fillStyle = furGradient;
+  context.beginPath();
+  context.arc(centerX, centerY, headRadius, 0, Math.PI * 2);
   context.fill();
 
-  context.fillStyle = "#f7d6bd";
+  context.fillStyle = "rgba(182, 125, 84, 0.3)";
   context.beginPath();
-  context.arc(hole.center.x - bodyRadius * 0.26, centerY - bodyRadius * 0.14, bodyRadius * 0.12, 0, Math.PI * 2);
-  context.arc(hole.center.x + bodyRadius * 0.26, centerY - bodyRadius * 0.14, bodyRadius * 0.12, 0, Math.PI * 2);
+  context.ellipse(
+    centerX,
+    centerY + headRadius * 0.2,
+    headRadius * 0.72,
+    headRadius * 0.5,
+    0,
+    0,
+    Math.PI * 2
+  );
   context.fill();
 
-  context.fillStyle = "#201712";
+  context.fillStyle = "#e8c7ad";
   context.beginPath();
-  context.arc(hole.center.x - bodyRadius * 0.26, centerY - bodyRadius * 0.14, bodyRadius * 0.05, 0, Math.PI * 2);
-  context.arc(hole.center.x + bodyRadius * 0.26, centerY - bodyRadius * 0.14, bodyRadius * 0.05, 0, Math.PI * 2);
+  context.ellipse(
+    centerX,
+    centerY + headRadius * 0.25,
+    headRadius * 0.48,
+    headRadius * 0.35,
+    0,
+    0,
+    Math.PI * 2
+  );
   context.fill();
 
-  context.strokeStyle = "#201712";
-  context.lineWidth = Math.max(2, bodyRadius * 0.06);
+  context.fillStyle = "rgba(98, 63, 42, 0.2)";
   context.beginPath();
-  context.arc(hole.center.x, centerY + bodyRadius * 0.16, bodyRadius * 0.22, 0.1, Math.PI - 0.1);
+  context.ellipse(
+    centerX,
+    centerY + headRadius * 0.31,
+    headRadius * 0.39,
+    headRadius * 0.18,
+    0,
+    0,
+    Math.PI * 2
+  );
+  context.fill();
+
+  context.fillStyle = "#523028";
+  context.beginPath();
+  context.ellipse(
+    centerX,
+    centerY + headRadius * 0.13,
+    headRadius * 0.18,
+    headRadius * 0.12,
+    0,
+    0,
+    Math.PI * 2
+  );
+  context.fill();
+
+  context.strokeStyle = "#2f1712";
+  context.lineWidth = Math.max(1.1, lineWidth * 0.78);
+  for (const side of [-1, 1] as const) {
+    context.beginPath();
+    context.moveTo(centerX + side * headRadius * 0.06, centerY + headRadius * 0.12);
+    context.lineTo(centerX + side * headRadius * 0.06, centerY + headRadius * 0.19);
+    context.stroke();
+  }
+
+  for (const side of [-1, 1] as const) {
+    const eyeX = centerX + side * headRadius * 0.3;
+    const eyeY = centerY - headRadius * 0.08;
+
+    context.fillStyle = "#1d100b";
+    context.beginPath();
+    context.arc(eyeX, eyeY, headRadius * 0.085, 0, Math.PI * 2);
+    context.fill();
+
+    context.fillStyle = "rgba(255, 250, 243, 0.9)";
+    context.beginPath();
+    context.arc(
+      eyeX - side * headRadius * 0.018,
+      eyeY - headRadius * 0.024,
+      headRadius * 0.024,
+      0,
+      Math.PI * 2
+    );
+    context.fill();
+  }
+
+  context.strokeStyle = "rgba(39, 23, 14, 0.62)";
+  context.lineWidth = Math.max(1, lineWidth * 0.62);
+  for (const side of [-1, 1] as const) {
+    const originX = centerX + side * headRadius * 0.3;
+    const originY = centerY + headRadius * 0.24;
+    for (const offset of [-0.08, 0, 0.08]) {
+      context.beginPath();
+      context.moveTo(originX, originY + headRadius * offset);
+      context.lineTo(
+        originX + side * headRadius * 0.56,
+        originY + headRadius * offset - headRadius * 0.06
+      );
+      context.stroke();
+    }
+  }
+
+  context.fillStyle = "#fff2df";
+  const toothWidth = headRadius * 0.1;
+  const toothHeight = headRadius * 0.22;
+  const toothTop = centerY + headRadius * 0.35;
+  context.fillRect(centerX - toothWidth - headRadius * 0.02, toothTop, toothWidth, toothHeight);
+  context.fillRect(centerX + headRadius * 0.02, toothTop, toothWidth, toothHeight);
+
+  context.strokeStyle = "#3a2017";
+  context.lineWidth = Math.max(1, lineWidth * 0.8);
+  context.beginPath();
+  context.arc(
+    centerX,
+    centerY + headRadius * 0.39,
+    headRadius * 0.22,
+    0.2,
+    Math.PI - 0.2
+  );
+  context.stroke();
+
+  for (const side of [-1, 1] as const) {
+    const pawX = centerX + side * headRadius * 0.5;
+    const pawY = hole.center.y + hole.radius * 0.05;
+    context.fillStyle = "#7b4a2e";
+    context.beginPath();
+    context.ellipse(
+      pawX,
+      pawY,
+      headRadius * 0.22,
+      headRadius * 0.14,
+      0,
+      0,
+      Math.PI * 2
+    );
+    context.fill();
+
+    context.strokeStyle = "#d8bea6";
+    context.lineWidth = Math.max(1, lineWidth * 0.52);
+    for (const clawOffset of [-0.07, 0, 0.07]) {
+      context.beginPath();
+      context.moveTo(pawX + headRadius * clawOffset, pawY + headRadius * 0.03);
+      context.lineTo(pawX + headRadius * clawOffset, pawY + headRadius * 0.11);
+      context.stroke();
+    }
+  }
+
+  context.restore();
+}
+
+function drawHoleFrontRim(context: CanvasRenderingContext2D, hole: Hole): void {
+  const rimY = hole.center.y + hole.radius * 0.22;
+  const rimRadiusX = hole.radius * 1.08;
+  const rimRadiusY = hole.radius * 0.55;
+
+  const rimGradient = context.createLinearGradient(0, rimY - rimRadiusY, 0, rimY + rimRadiusY);
+  rimGradient.addColorStop(0, "rgba(183, 129, 80, 0.12)");
+  rimGradient.addColorStop(0.46, "rgba(110, 66, 36, 0.34)");
+  rimGradient.addColorStop(1, "rgba(59, 32, 16, 0.56)");
+
+  context.fillStyle = rimGradient;
+  context.beginPath();
+  context.ellipse(
+    hole.center.x,
+    rimY,
+    rimRadiusX,
+    rimRadiusY,
+    0,
+    0,
+    Math.PI * 2
+  );
+  context.fill();
+
+  context.strokeStyle = "rgba(31, 16, 8, 0.62)";
+  context.lineWidth = Math.max(2, hole.radius * 0.08);
+  context.beginPath();
+  context.ellipse(
+    hole.center.x,
+    rimY + hole.radius * 0.02,
+    rimRadiusX * 0.97,
+    rimRadiusY * 0.89,
+    0,
+    0,
+    Math.PI * 2
+  );
   context.stroke();
 }
 
@@ -194,11 +418,15 @@ export function renderGame(
   const activeHoles = new Set(state.activeMoles.map((mole) => mole.holeId));
   for (const hole of holes) {
     drawHole(context, hole);
+  }
+  for (const hole of holes) {
     if (activeHoles.has(hole.id)) {
       drawMole(context, hole);
     }
   }
+  for (const hole of holes) {
+    drawHoleFrontRim(context, hole);
+  }
 
   drawOverlay(context, width, height, state);
 }
-
