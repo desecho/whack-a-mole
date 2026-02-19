@@ -1,3 +1,4 @@
+import { createHitSoundPlayer } from "./audio";
 import { DEFAULT_CONFIG } from "./config";
 import { findHitMoleId, eventToCanvasPoint } from "./input";
 import { randomSpawnDelay } from "./random";
@@ -24,6 +25,7 @@ export class Game {
   private readonly config: GameConfig;
   private readonly onStateChange?: (state: GameState) => void;
   private readonly random: () => number;
+  private readonly hitSoundPlayer = createHitSoundPlayer();
 
   private state: GameState;
   private holes: Hole[] = [];
@@ -73,6 +75,7 @@ export class Game {
 
   public destroy(): void {
     this.stopLoop();
+    this.hitSoundPlayer.destroy();
     this.canvas.removeEventListener("pointerdown", this.handlePointerDown);
     window.removeEventListener("resize", this.handleResize);
   }
@@ -205,6 +208,7 @@ export class Game {
     }
 
     event.preventDefault();
+    this.hitSoundPlayer.prime();
     const nowMs = performance.now();
     const point = eventToCanvasPoint(event, this.canvas);
     const hitMoleId = findHitMoleId(point, this.state.activeMoles, this.holes, nowMs);
@@ -228,6 +232,7 @@ export class Game {
       activeMoles: hitOutcome.activeMoles,
       nextSpawnAtMs: 0
     };
+    this.hitSoundPlayer.playHit();
     this.emitState();
     this.renderCurrentState(nowMs);
   };
